@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t martijnwortel/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  # - docker run martijnwortel/react-test npm test -- --coverage
+  - docker run -e CI=true martijnwortel/react-test npm test
+
+after_success:
+  - docker build -t martijnwortel/multi-client ./client
+  - docker build -t martijnwortel/multi-router ./router
+  - docker build -t martijnwortel/multi-api ./api
+  - docker build -t martijnwortel/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push martijnwortel/multi-client
+  - docker push martijnwortel/multi-router
+  - docker push martijnwortel/multi-api
+  - docker push martijnwortel/multi-worker
